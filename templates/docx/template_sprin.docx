@@ -1,0 +1,57 @@
+<?php
+require_once '../vendor/autoload.php'; // Load PHPWord via Composer
+require_once '../config/database.php';
+
+use PhpOffice\PhpWord\TemplateProcessor;
+
+$id_sprin = $_GET['id']; // Ambil ID Sprin dari URL
+
+try {
+    // 1. Ambil Data Header Sprin
+    $query = "SELECT * FROM t_sprin WHERE id_sprin = :id";
+    $stmt = $db->prepare($query);
+    $stmt->execute(['id' => $id_sprin]);
+    $sprin = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$sprin) die("Data Sprin tidak ditemukan.");
+
+    // 2. Ambil Daftar Anggota (Urut Pangkat/Hierarki)
+    $query_agt = "SELECT p.nama_lengkap, p.nomor_induk, k.singkatan 
+                  FROM t_sprin_detail d
+                  JOIN m_personel p ON d.id_personel = p.id_personel
+                  JOIN m_pangkat k ON p.id_pangkat = k.id_pangkat
+                  WHERE d.id_sprin = :id
+                  ORDER BY k.hirarki_level ASC";
+    $stmt_agt = $db->prepare($query_agt);
+    $stmt_agt->execute(['id' => $id_sprin]);
+    $anggota = $stmt_agt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 3. Inisialisasi Template Processor
+    $template = new TemplateProcessor('../templates/docx/template_sprin.docx');
+
+    // 4. Isi Variabel Header
+    $template->setValue('NO_SPRIN', $sprin['no_sprin']);
+    $template->setValue('PERTIMBANGAN', $sprin['pertimbangan']);
+    $template->setValue('DASAR', $sprin['dasar_hukum']);
+    $template->setValue('TGL_CETAK', date('d F Y', strtotime($sprin['tgl_cetak_sprin'])));
+
+    // 5. Susun Daftar Anggota dalam format List (String)
+    $list_anggota = "";
+    foreach ($anggota as $index => $agt) {
+        $no = $index + 1;
+        $list_anggota .= $no . ". " . $agt['singkatan'] . " " . $agt['nama_lengkap'] . " / NRP " . $agt['nomor_induk'] . "\n";
+    }
+    // Ganti variabel DAFTAR_ANGGOTA dengan string yang sudah disusun
+    $template->setValue('DAFTAR_ANGGOTA', $list_anggota);
+
+    // 6. Proses Download
+    $filename = "Sprin_" . str_replace("/", "_", $sprin['no_sprin']) . ".docx";
+    header("Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+    header("Content-Disposition: attachment; filename=\"$filename\"");
+    
+    $template->saveAs('php://output');
+    exit;
+
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+}
