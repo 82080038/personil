@@ -23,3 +23,74 @@
         </div>
     </div>
 </div>
+
+$(document).ready(function() {
+    // 1. Inisialisasi Select2 untuk cari personel via API
+    $('#select_personel').select2({
+        placeholder: 'Ketik Nama atau NRP...',
+        ajax: {
+            url: 'api/get_personel.php', // Memanggil API yang kita buat sebelumnya
+            dataType: 'json',
+            delay: 250,
+            processResults: function (response) {
+                return {
+                    results: $.map(response.data, function (item) {
+                        return {
+                            id: item.id_personel,
+                            text: item.singkatan + ' ' + item.nama_lengkap + ' (' + item.nomor_induk + ')'
+                        }
+                    })
+                };
+            }
+        }
+    });
+
+    // 2. Event saat Personel dipilih (Cek Bentrok)
+    $('#select_personel').on('change', function() {
+        const id_personel = $(this).val();
+        const tgl_mulai   = $('#tgl_mulai').val();
+        const tgl_selesai = $('#tgl_selesai').val();
+
+        // Validasi tanggal harus diisi dulu
+        if (!tgl_mulai || !tgl_selesai) {
+            alert("Silakan isi tanggal giat terlebih dahulu!");
+            $(this).val(null).trigger('change');
+            return;
+        }
+
+        // Kirim data ke API cek_bentrok.php
+        $.ajax({
+            url: 'api/cek_bentrok.php',
+            type: 'POST',
+            data: {
+                id_personel: id_personel,
+                tgl_mulai: tgl_mulai,
+                tgl_selesai: tgl_selesai
+            },
+            success: function(response) {
+                if (response.status === 'conflict') {
+                    // Jika Bentrok: Tampilkan Peringatan Merah
+                    let info = response.data[0];
+                    $('#pesan_bentrok').html(`
+                        <div class="alert alert-danger">
+                            ⚠️ <strong>PERINGATAN:</strong> Anggota ini sudah terdaftar di 
+                            <strong>${info.no_sprin}</strong> (${info.nama_giat}).
+                        </div>
+                    `);
+                    $('#btn_tambah').prop('disabled', true); // Kunci tombol tambah
+                } else {
+                    // Jika Aman: Tampilkan Pesan Hijau
+                    $('#pesan_bentrok').html(`
+                        <div class="alert alert-success">
+                            ✅ Personel tersedia untuk tanggal tersebut.
+                        </div>
+                    `);
+                    $('#btn_tambah').prop('disabled', false); // Aktifkan tombol
+                }
+            },
+            error: function() {
+                console.error("Gagal menghubungi API Cek Bentrok");
+            }
+        });
+    });
+});
