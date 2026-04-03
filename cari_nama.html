@@ -1,96 +1,295 @@
-<!-- Form Sederhana Pembuatan Sprin -->
-<div class="card">
-    <div class="card-body">
-        <h5>Tambah Anggota ke Sprin</h5>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Cari Personel & Cek Bentrok - SMO-BAGOPS</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --polri-blue: #003366;
+            --polri-gold: #C9A227;
+        }
         
-        <div class="row">
-            <div class="col-md-4">
-                <label>Tanggal Mulai & Selesai Giat</label>
-                <input type="date" id="tgl_mulai" class="form-control">
-                <input type="date" id="tgl_selesai" class="form-control mt-2">
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+        
+        .demo-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .demo-header {
+            background: linear-gradient(135deg, var(--polri-blue) 0%, #004080 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px 10px 0 0;
+            text-align: center;
+        }
+        
+        .demo-header h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .demo-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        
+        .demo-body {
+            background: white;
+            padding: 40px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .card {
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .card-header {
+            background: var(--polri-blue);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background-color: var(--polri-blue);
+            border-color: var(--polri-blue);
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            border-color: #28a745;
+        }
+        
+        #tabel-anggota {
+            margin-top: 20px;
+        }
+        
+        .nav-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <a href="index.php" class="btn btn-light nav-back">
+        <i class="bi bi-arrow-left me-1"></i>Kembali
+    </a>
+    
+    <div class="demo-container">
+        <div class="demo-header">
+            <h3><i class="bi bi-shield-shaded me-2"></i>SMO-BAGOPS</h3>
+            <p>Demo: Cari Personel & Cek Bentrok Jadwal</p>
+        </div>
+        
+        <div class="demo-body">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Fitur Demo:</strong> Pilih tanggal giat, lalu cari personel untuk melihat 
+                apakah personel tersebut tersedia atau sudah terploting di Sprin lain.
             </div>
             
-            <div class="col-md-6">
-                <label>Pilih Personel (NRP/Nama)</label>
-                <select id="select_personel" class="form-control"></select>
-                <!-- Tempat Muncul Notifikasi Bentrok -->
-                <div id="pesan_bentrok" class="mt-2"></div>
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-plus-circle me-2"></i>Tambah Anggota ke Sprin
+                </div>
+                <div class="card-body">
+                    <form id="formDemo">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    <i class="bi bi-calendar me-1"></i>Tanggal Giat
+                                </label>
+                                <input type="date" id="tgl_mulai" class="form-control" required>
+                                <input type="date" id="tgl_selesai" class="form-control mt-2" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-person me-1"></i>Pilih Personel
+                                </label>
+                                <select id="select_personel" class="form-select" style="width: 100%;"></select>
+                                <div id="pesan_bentrok" class="mt-2"></div>
+                            </div>
+                            
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" id="btn_tambah" class="btn btn-success w-100" disabled>
+                                    <i class="bi bi-plus-lg me-1"></i>Tambah
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
             
-            <div class="col-md-2">
-                <button id="btn_tambah" class="btn btn-primary mt-4">Tambah</button>
+            <div class="card mt-4" id="daftar-anggota" style="display: none;">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-people me-2"></i>Daftar Anggota
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0" id="tabel-anggota">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No</th>
+                                <th>NRP/NIP</th>
+                                <th>Nama</th>
+                                <th>Pangkat</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
-
-$(document).ready(function() {
-    // 1. Inisialisasi Select2 untuk cari personel via API
-    $('#select_personel').select2({
-        placeholder: 'Ketik Nama atau NRP...',
-        ajax: {
-            url: 'api/get_personel.php', // Memanggil API yang kita buat sebelumnya
-            dataType: 'json',
-            delay: 250,
-            processResults: function (response) {
-                return {
-                    results: $.map(response.data, function (item) {
-                        return {
-                            id: item.id_personel,
-                            text: item.singkatan + ' ' + item.nama_lengkap + ' (' + item.nomor_induk + ')'
-                        }
-                    })
-                };
-            }
-        }
-    });
-
-    // 2. Event saat Personel dipilih (Cek Bentrok)
-    $('#select_personel').on('change', function() {
-        const id_personel = $(this).val();
-        const tgl_mulai   = $('#tgl_mulai').val();
-        const tgl_selesai = $('#tgl_selesai').val();
-
-        // Validasi tanggal harus diisi dulu
-        if (!tgl_mulai || !tgl_selesai) {
-            alert("Silakan isi tanggal giat terlebih dahulu!");
-            $(this).val(null).trigger('change');
-            return;
-        }
-
-        // Kirim data ke API cek_bentrok.php
-        $.ajax({
-            url: 'api/cek_bentrok.php',
-            type: 'POST',
-            data: {
-                id_personel: id_personel,
-                tgl_mulai: tgl_mulai,
-                tgl_selesai: tgl_selesai
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+    $(document).ready(function() {
+        let daftarAnggota = [];
+        let selectedPersonel = null;
+        
+        $('#select_personel').select2({
+            placeholder: 'Ketik Nama atau NRP...',
+            ajax: {
+                url: 'API/get_personel.php',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return { q: params.term };
+                },
+                processResults: function(response) {
+                    return { results: response.data };
+                },
+                cache: true
             },
-            success: function(response) {
-                if (response.status === 'conflict') {
-                    // Jika Bentrok: Tampilkan Peringatan Merah
-                    let info = response.data[0];
-                    $('#pesan_bentrok').html(`
-                        <div class="alert alert-danger">
-                            ⚠️ <strong>PERINGATAN:</strong> Anggota ini sudah terdaftar di 
-                            <strong>${info.no_sprin}</strong> (${info.nama_giat}).
-                        </div>
-                    `);
-                    $('#btn_tambah').prop('disabled', true); // Kunci tombol tambah
-                } else {
-                    // Jika Aman: Tampilkan Pesan Hijau
-                    $('#pesan_bentrok').html(`
-                        <div class="alert alert-success">
-                            ✅ Personel tersedia untuk tanggal tersebut.
-                        </div>
-                    `);
-                    $('#btn_tambah').prop('disabled', false); // Aktifkan tombol
-                }
-            },
-            error: function() {
-                console.error("Gagal menghubungi API Cek Bentrok");
-            }
+            minimumInputLength: 2,
+            theme: 'bootstrap-5'
         });
+        
+        $('#select_personel').on('select2:select', function(e) {
+            selectedPersonel = e.params.data;
+            cekBentrok();
+        });
+        
+        $('#select_personel').on('select2:clear', function() {
+            selectedPersonel = null;
+            $('#pesan_bentrok').html('');
+            $('#btn_tambah').prop('disabled', true);
+        });
+        
+        function cekBentrok() {
+            if (!selectedPersonel) return;
+            
+            const tgl_mulai = $('#tgl_mulai').val();
+            const tgl_selesai = $('#tgl_selesai').val();
+            
+            if (!tgl_mulai || !tgl_selesai) {
+                $('#pesan_bentrok').html(`
+                    <div class="alert alert-warning py-1 mb-0">
+                        <small>Isi tanggal giat terlebih dahulu</small>
+                    </div>
+                `);
+                $('#btn_tambah').prop('disabled', true);
+                return;
+            }
+            
+            $.ajax({
+                url: 'API/cek_bentrok.php',
+                type: 'POST',
+                data: {
+                    id_personel: selectedPersonel.id,
+                    tgl_mulai: tgl_mulai,
+                    tgl_selesai: tgl_selesai
+                },
+                success: function(response) {
+                    if (response.status === 'conflict') {
+                        let info = response.data[0];
+                        $('#pesan_bentrok').html(`
+                            <div class="alert alert-danger py-2 mb-0">
+                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                <strong>BENTROK:</strong> Sudah terdaftar di<br>
+                                <small><strong>${info.no_sprin}</strong></small>
+                            </div>
+                        `);
+                        $('#btn_tambah').prop('disabled', true);
+                    } else {
+                        $('#pesan_bentrok').html(`
+                            <div class="alert alert-success py-2 mb-0">
+                                <i class="bi bi-check-circle me-1"></i>Tersedia
+                            </div>
+                        `);
+                        $('#btn_tambah').prop('disabled', false);
+                    }
+                }
+            });
+        }
+        
+        $('#tgl_mulai, #tgl_selesai').on('change', function() {
+            if (selectedPersonel) cekBentrok();
+        });
+        
+        $('#btn_tambah').on('click', function() {
+            if (!selectedPersonel) return;
+            
+            let exists = daftarAnggota.find(a => a.id == selectedPersonel.id);
+            if (exists) {
+                Swal.fire('Peringatan', 'Personel sudah ada', 'warning');
+                return;
+            }
+            
+            daftarAnggota.push(selectedPersonel);
+            renderDaftarAnggota();
+            
+            $('#select_personel').val(null).trigger('change');
+            $('#pesan_bentrok').html('');
+            $('#btn_tambah').prop('disabled', true);
+            selectedPersonel = null;
+        });
+        
+        function renderDaftarAnggota() {
+            if (daftarAnggota.length === 0) {
+                $('#daftar-anggota').hide();
+                return;
+            }
+            
+            $('#daftar-anggota').show();
+            let html = '';
+            daftarAnggota.forEach((a, i) => {
+                html += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${a.nomor_induk}</td>
+                        <td>${a.nama_lengkap}</td>
+                        <td><span class="badge bg-primary">${a.pangkat}</span></td>
+                        <td><span class="badge bg-success">Tersedia</span></td>
+                    </tr>
+                `;
+            });
+            $('#tabel-anggota tbody').html(html);
+        }
     });
-});
+    </script>
+</body>
+</html>

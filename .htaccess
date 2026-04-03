@@ -1,0 +1,47 @@
+# Proteksi direktori sensitif
+Options -Indexes
+
+# Disable server signature
+ServerSignature Off
+
+# PHP settings (jika diizinkan)
+php_value upload_max_filesize 10M
+php_value post_max_size 10M
+php_value max_execution_time 300
+php_value session.gc_maxlifetime 3600
+
+# Enable rewrite engine
+RewriteEngine On
+RewriteBase /personil/
+
+# Redirect HTTP to HTTPS (opsional, uncomment jika menggunakan SSL)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+# Protect sensitive files
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+<FilesMatch "(\.sql|\.log|\.ini|\.conf)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Disable access to config and core directories
+RewriteRule ^config/ - [F,L]
+RewriteRule ^core/ - [F,L]
+
+# Custom error pages
+ErrorDocument 403 /personil/error/403.php
+ErrorDocument 404 /personil/error/404.php
+ErrorDocument 500 /personil/error/500.php
+
+# Security headers (jika mod_headers diaktifkan)
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
