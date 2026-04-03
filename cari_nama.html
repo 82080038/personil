@@ -1,0 +1,25 @@
+<!-- Form Sederhana Pembuatan Sprin -->
+<div class="card">
+    <div class="card-body">
+        <h5>Tambah Anggota ke Sprin</h5>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <label>Tanggal Mulai & Selesai Giat</label>
+                <input type="date" id="tgl_mulai" class="form-control">
+                <input type="date" id="tgl_selesai" class="form-control mt-2">
+            </div>
+            
+            <div class="col-md-6">
+                <label>Pilih Personel (NRP/Nama)</label>
+                <select id="select_personel" class="form-control"></select>
+                <!-- Tempat Muncul Notifikasi Bentrok -->
+                <div id="pesan_bentrok" class="mt-2"></div>
+            </div>
+            
+            <div class="col-md-2">
+                <button id="btn_tambah" class="btn btn-primary mt-4">Tambah</button>
+            </div>
+        </div>
+    </div>
+</div>
